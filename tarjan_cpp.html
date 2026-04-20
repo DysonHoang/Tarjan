@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thuật toán Tarjan - C++</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #f0883e;
+    --purple: #bc8cff;
+    --red: #ff7b72;
+    --yellow: #d2a679;
+    --teal: #39d353;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: 'SCC';
+    position: absolute;
+    right: -1rem;
+    top: -1.5rem;
+    font-size: 9rem;
+    font-weight: 800;
+    color: rgba(88, 166, 255, 0.06);
+    pointer-events: none;
+    letter-spacing: -4px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.8rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 560px;
+  }
+
+  .main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+    display: grid;
+    gap: 2rem;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  p { color: var(--muted); margin-bottom: 0.7rem; font-size: 0.95rem; }
+  p strong { color: var(--text); }
+
+  /* Cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+  }
+
+  /* Concept grid */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .concept-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+  }
+
+  .concept-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .concept-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+  }
+
+  .concept-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Code block */
+  .code-block {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ff5f56; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #27c93f; }
+
+  .code-lang {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .code-body {
+    padding: 1.2rem 1.5rem;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.8;
+    tab-size: 4;
+  }
+
+  .kw { color: #ff7b72; }
+  .type { color: #ffa657; }
+  .fn { color: #d2a8ff; }
+  .var { color: #79c0ff; }
+  .num { color: #79c0ff; }
+  .cmt { color: #8b949e; font-style: italic; }
+  .str { color: #a5d6ff; }
+  .op { color: #e6edf3; }
+  .macro { color: #f0883e; }
+  .inc { color: #a5d6ff; }
+
+  /* Steps */
+  .steps { display: grid; gap: 0.8rem; }
+
+  .step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem 1.2rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .step:hover { border-color: var(--accent); }
+  .step.active { border-color: var(--accent); background: rgba(88, 166, 255, 0.08); }
+
+  .step-num {
+    min-width: 28px;
+    height: 28px;
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .step-content h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .step-content p {
+    font-size: 0.83rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Graph SVG area */
+  .graph-area {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .graph-area svg { max-width: 100%; }
+
+  /* Complexity table */
+  .complexity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .complexity-table th {
+    background: var(--bg3);
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .complexity-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .complexity-table td:first-child { color: var(--text); }
+  .complexity-table td code {
+    background: var(--bg3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+    font-size: 0.82rem;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .tag-green { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+  .tag-orange { background: rgba(240, 136, 62, 0.15); color: var(--orange); }
+  .tag-purple { background: rgba(188, 140, 255, 0.15); color: var(--purple); }
+
+  /* Applications */
+  .app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+  }
+
+  .app-item {
+    padding: 1rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+  }
+
+  .app-item .app-icon {
+    font-size: 1.3rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .app-item strong { display: block; font-size: 0.85rem; margin-bottom: 0.3rem; color: var(--text); }
+  .app-item span { font-size: 0.78rem; color: var(--muted); }
+
+  /* Inline code */
+  code {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    color: var(--purple);
+  }
+
+  /* Highlight note */
+  .note {
+    background: rgba(88, 166, 255, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem 1rem;
+    font-size: 0.87rem;
+    color: var(--text);
+    margin: 0.5rem 0;
+  }
+
+  .note strong { color: var(--accent); }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Graph Algorithm</div>
+  <h1>Thuật toán <span>Tarjan</span></h1>
+  <p class="subtitle">Tìm tất cả Thành phần Liên thông Mạnh (Strongly Connected Components) trong đồ thị có hướng — thời gian O(V + E).</p>
+</div>
+
+<div class="main">
+
+  <!-- Khái niệm -->
+  <div>
+    <div class="section-label">Khái niệm cơ bản</div>
+    <h2>Trước khi bắt đầu</h2>
+    <div class="concept-grid">
+      <div class="concept-item">
+        <div class="concept-icon">🔗</div>
+        <div class="concept-title" style="color: #58a6ff;">SCC là gì?</div>
+        <div class="concept-desc">Thành phần liên thông mạnh — tập hợp đỉnh mà <strong>mọi cặp đỉnh</strong> đều có thể đi đến nhau.</div>
+      </div>
+      <div class="concept-item">
+        <div class="concept-icon">🕰️</div>
+        <div class="concept-title" style="color: #f0883e;">disc[u]</div>
+        <div class="concept-desc">Thời điểm khám phá đỉnh <strong>u</strong> khi chạy DFS. Mỗi đỉnh có giá trị duy nhất, tăng dần.</div>
+      </div>
+      <div class="concept-item">
+        <div class="concept-icon">🔻</div>
+        <div class="concept-title" style="color: #bc8cff;">low[u]</div>
+        <div class="concept-desc">Giá trị disc nhỏ nhất có thể đạt được từ cây con DFS của <strong>u</strong>, kể cả qua back-edge.</div>
+      </div>
+      <div class="concept-item">
+        <div class="concept-icon">📦</div>
+        <div class="concept-title" style="color: #3fb950;">Stack</div>
+        <div class="concept-desc">Lưu trữ các đỉnh đang được xét. Khi <code>low[u] == disc[u]</code>, pop stack để lấy 1 SCC.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ví dụ đồ thị -->
+  <div>
+    <div class="section-label">Ví dụ minh họa</div>
+    <h2>Đồ thị mẫu & 3 SCC</h2>
+    <div class="graph-area">
+      <svg viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" width="680" height="280">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#4a5568"/>
+          </marker>
+          <marker id="arr-r" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#ff7b72"/>
+          </marker>
+          <marker id="arr-g" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+          </marker>
+          <marker id="arr-b" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+          </marker>
+        </defs>
+
+        <!-- SCC backgrounds -->
+        <ellipse cx="120" cy="140" rx="90" ry="65" fill="rgba(255,123,114,0.08)" stroke="#ff7b72" stroke-width="1" stroke-dasharray="5,4"/>
+        <text x="40" y="218" fill="#ff7b72" font-size="11" font-family="JetBrains Mono">SCC 1</text>
+
+        <ellipse cx="340" cy="90" rx="80" ry="50" fill="rgba(63,185,80,0.08)" stroke="#3fb950" stroke-width="1" stroke-dasharray="5,4"/>
+        <text x="290" y="148" fill="#3fb950" font-size="11" font-family="JetBrains Mono">SCC 2</text>
+
+        <ellipse cx="530" cy="170" rx="110" ry="75" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1" stroke-dasharray="5,4"/>
+        <text x="462" y="255" fill="#58a6ff" font-size="11" font-family="JetBrains Mono">SCC 3</text>
+
+        <!-- Edges inside SCC1 -->
+        <line x1="85" y1="118" x2="70" y2="175" stroke="#ff7b72" stroke-width="1.5" marker-end="url(#arr-r)"/>
+        <line x1="72" y1="168" x2="110" y2="173" stroke="#ff7b72" stroke-width="1.5" marker-end="url(#arr-r)"/>
+        <line x1="128" y1="167" x2="100" y2="118" stroke="#ff7b72" stroke-width="1.5" marker-end="url(#arr-r)"/>
+
+        <!-- Edges inside SCC2 -->
+        <line x1="298" y1="75" x2="356" y2="75" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g)"/>
+        <line x1="364" y1="82" x2="312" y2="98" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arr-g)"/>
+
+        <!-- Edges inside SCC3 -->
+        <line x1="476" y1="148" x2="534" y2="148" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b)"/>
+        <line x1="542" y1="155" x2="590" y2="180" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b)"/>
+        <line x1="582" y1="195" x2="524" y2="205" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b)"/>
+        <line x1="515" y1="205" x2="478" y2="165" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#arr-b)"/>
+
+        <!-- Cross edges -->
+        <path d="M155 120 C200 80 250 72 275 76" stroke="#4a5568" stroke-width="1.2" fill="none" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+        <path d="M370 82 C410 70 435 120 460 140" stroke="#4a5568" stroke-width="1.2" fill="none" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+        <path d="M160 165 C200 200 400 220 458 195" stroke="#4a5568" stroke-width="1.2" fill="none" marker-end="url(#arr)" stroke-dasharray="4,3"/>
+
+        <!-- Nodes SCC1 -->
+        <circle cx="90" cy="112" r="20" fill="#1a0f0f" stroke="#ff7b72" stroke-width="2"/>
+        <text x="90" y="117" text-anchor="middle" fill="#ff7b72" font-size="13" font-family="JetBrains Mono" font-weight="600">0</text>
+
+        <circle cx="65" cy="175" r="20" fill="#1a0f0f" stroke="#ff7b72" stroke-width="2"/>
+        <text x="65" y="180" text-anchor="middle" fill="#ff7b72" font-size="13" font-family="JetBrains Mono" font-weight="600">1</text>
+
+        <circle cx="130" cy="175" r="20" fill="#1a0f0f" stroke="#ff7b72" stroke-width="2"/>
+        <text x="130" y="180" text-anchor="middle" fill="#ff7b72" font-size="13" font-family="JetBrains Mono" font-weight="600">2</text>
+
+        <!-- Nodes SCC2 -->
+        <circle cx="285" cy="80" r="20" fill="#0a1a0a" stroke="#3fb950" stroke-width="2"/>
+        <text x="285" y="85" text-anchor="middle" fill="#3fb950" font-size="13" font-family="JetBrains Mono" font-weight="600">3</text>
+
+        <circle cx="375" cy="80" r="20" fill="#0a1a0a" stroke="#3fb950" stroke-width="2"/>
+        <text x="375" y="85" text-anchor="middle" fill="#3fb950" font-size="13" font-family="JetBrains Mono" font-weight="600">4</text>
+
+        <!-- Nodes SCC3 -->
+        <circle cx="465" cy="150" r="20" fill="#0a0f1a" stroke="#58a6ff" stroke-width="2"/>
+        <text x="465" y="155" text-anchor="middle" fill="#58a6ff" font-size="13" font-family="JetBrains Mono" font-weight="600">5</text>
+
+        <circle cx="545" cy="150" r="20" fill="#0a0f1a" stroke="#58a6ff" stroke-width="2"/>
+        <text x="545" y="155" text-anchor="middle" fill="#58a6ff" font-size="13" font-family="JetBrains Mono" font-weight="600">6</text>
+
+        <circle cx="595" cy="195" r="20" fill="#0a0f1a" stroke="#58a6ff" stroke-width="2"/>
+        <text x="595" y="200" text-anchor="middle" fill="#58a6ff" font-size="13" font-family="JetBrains Mono" font-weight="600">7</text>
+
+        <circle cx="515" cy="210" r="20" fill="#0a0f1a" stroke="#58a6ff" stroke-width="2"/>
+        <text x="515" y="215" text-anchor="middle" fill="#58a6ff" font-size="13" font-family="JetBrains Mono" font-weight="600">8</text>
+      </svg>
+    </div>
+    <div class="note" style="margin-top: 0.8rem;">
+      <strong>Kết quả:</strong> Đồ thị trên có 3 SCC: <code>{0,1,2}</code> · <code>{3,4}</code> · <code>{5,6,7,8}</code>. Các cạnh đứt giữa SCC là cạnh liên SCC không tạo thành chu trình.
+    </div>
+  </div>
+
+  <!-- Các bước thuật toán -->
+  <div>
+    <div class="section-label">Cách hoạt động</div>
+    <h2>Từng bước thuật toán</h2>
+    <div class="steps" id="steps">
+      <div class="step active" onclick="selectStep(this)">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Khởi tạo biến toàn cục</h3>
+          <p>Tạo mảng <code>disc[]</code>, <code>low[]</code>, <code>inStack[]</code>, stack STL, và bộ đếm thời gian <code>timer</code>. Tất cả đặt về -1 / false / 0.</p>
+        </div>
+      </div>
+      <div class="step" onclick="selectStep(this)">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Chạy DFS từ mỗi đỉnh chưa thăm</h3>
+          <p>Với mỗi đỉnh <code>u</code> chưa được thăm (<code>disc[u] == -1</code>), gọi hàm <code>dfs(u)</code>. Điều này đảm bảo xử lý toàn bộ đồ thị dù không liên thông.</p>
+        </div>
+      </div>
+      <div class="step" onclick="selectStep(this)">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Gán disc[u] và low[u], push vào stack</h3>
+          <p>Khi lần đầu thăm đỉnh <code>u</code>, đặt <code>disc[u] = low[u] = timer++</code> rồi đẩy <code>u</code> vào stack và đánh dấu <code>inStack[u] = true</code>.</p>
+        </div>
+      </div>
+      <div class="step" onclick="selectStep(this)">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h3>Duyệt các đỉnh kề</h3>
+          <p>Với mỗi cạnh <code>u → v</code>: nếu <code>v</code> chưa thăm, đệ quy DFS rồi cập nhật <code>low[u] = min(low[u], low[v])</code>. Nếu <code>v</code> đang trong stack, cập nhật <code>low[u] = min(low[u], disc[v])</code>.</p>
+        </div>
+      </div>
+      <div class="step" onclick="selectStep(this)">
+        <div class="step-num">05</div>
+        <div class="step-content">
+          <h3>Kiểm tra điều kiện tạo SCC</h3>
+          <p>Sau khi xử lý xong mọi cạnh kề của <code>u</code>, nếu <code>low[u] == disc[u]</code> thì <code>u</code> là gốc của một SCC. Pop stack cho đến khi lấy ra <code>u</code> — tập các đỉnh đó tạo thành 1 SCC.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Code C++ -->
+  <div>
+    <div class="section-label">Triển khai</div>
+    <h2>Code C++ hoàn chỉnh</h2>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+        </div>
+        <span class="code-lang">C++ · tarjan.cpp</span>
+      </div>
+      <pre class="code-body"><span class="macro">#include</span> <span class="inc">&lt;bits/stdc++.h&gt;</span>
+<span class="kw">using namespace</span> <span class="var">std</span>;
+
+<span class="kw">const int</span> <span class="var">MAXN</span> = <span class="num">1e5</span> + <span class="num">5</span>;
+
+<span class="type">int</span> <span class="var">n</span>, <span class="var">m</span>;
+<span class="var">vector</span>&lt;<span class="type">int</span>&gt; <span class="var">adj</span>[<span class="var">MAXN</span>];
+<span class="type">int</span>  <span class="var">disc</span>[<span class="var">MAXN</span>], <span class="var">low</span>[<span class="var">MAXN</span>];
+<span class="type">bool</span> <span class="var">inStack</span>[<span class="var">MAXN</span>];
+<span class="var">stack</span>&lt;<span class="type">int</span>&gt; <span class="var">st</span>;
+<span class="type">int</span>  <span class="var">timer_</span> = <span class="num">0</span>;
+<span class="var">vector</span>&lt;<span class="var">vector</span>&lt;<span class="type">int</span>&gt;&gt; <span class="var">sccs</span>;    <span class="cmt">// lưu kết quả các SCC</span>
+
+<span class="type">void</span> <span class="fn">dfs</span>(<span class="type">int</span> <span class="var">u</span>) {
+    <span class="cmt">// Gán thời điểm khám phá và giá trị low ban đầu</span>
+    <span class="var">disc</span>[<span class="var">u</span>] = <span class="var">low</span>[<span class="var">u</span>] = <span class="var">timer_</span>++;
+    <span class="var">st</span>.<span class="fn">push</span>(<span class="var">u</span>);
+    <span class="var">inStack</span>[<span class="var">u</span>] = <span class="kw">true</span>;
+
+    <span class="kw">for</span> (<span class="type">int</span> <span class="var">v</span> : <span class="var">adj</span>[<span class="var">u</span>]) {
+        <span class="kw">if</span> (<span class="var">disc</span>[<span class="var">v</span>] == -<span class="num">1</span>) {
+            <span class="cmt">// v chưa thăm → DFS tiếp</span>
+            <span class="fn">dfs</span>(<span class="var">v</span>);
+            <span class="var">low</span>[<span class="var">u</span>] = <span class="var">min</span>(<span class="var">low</span>[<span class="var">u</span>], <span class="var">low</span>[<span class="var">v</span>]);
+        } <span class="kw">else if</span> (<span class="var">inStack</span>[<span class="var">v</span>]) {
+            <span class="cmt">// v đang trong stack → back-edge</span>
+            <span class="var">low</span>[<span class="var">u</span>] = <span class="var">min</span>(<span class="var">low</span>[<span class="var">u</span>], <span class="var">disc</span>[<span class="var">v</span>]);
+        }
+    }
+
+    <span class="cmt">// Kiểm tra u có phải gốc của SCC không</span>
+    <span class="kw">if</span> (<span class="var">low</span>[<span class="var">u</span>] == <span class="var">disc</span>[<span class="var">u</span>]) {
+        <span class="var">vector</span>&lt;<span class="type">int</span>&gt; <span class="var">scc</span>;
+        <span class="kw">while</span> (<span class="kw">true</span>) {
+            <span class="type">int</span> <span class="var">node</span> = <span class="var">st</span>.<span class="fn">top</span>(); <span class="var">st</span>.<span class="fn">pop</span>();
+            <span class="var">inStack</span>[<span class="var">node</span>] = <span class="kw">false</span>;
+            <span class="var">scc</span>.<span class="fn">push_back</span>(<span class="var">node</span>);
+            <span class="kw">if</span> (<span class="var">node</span> == <span class="var">u</span>) <span class="kw">break</span>;
+        }
+        <span class="var">sccs</span>.<span class="fn">push_back</span>(<span class="var">scc</span>);
+    }
+}
+
+<span class="type">void</span> <span class="fn">tarjan</span>() {
+    <span class="fn">memset</span>(<span class="var">disc</span>, -<span class="num">1</span>, <span class="kw">sizeof</span>(<span class="var">disc</span>));
+    <span class="fn">memset</span>(<span class="var">inStack</span>, <span class="kw">false</span>, <span class="kw">sizeof</span>(<span class="var">inStack</span>));
+    <span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; <span class="var">n</span>; <span class="var">i</span>++)
+        <span class="kw">if</span> (<span class="var">disc</span>[<span class="var">i</span>] == -<span class="num">1</span>)
+            <span class="fn">dfs</span>(<span class="var">i</span>);
+}
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="var">ios_base</span>::<span class="fn">sync_with_stdio</span>(<span class="kw">false</span>);
+    <span class="var">cin</span>.<span class="fn">tie</span>(<span class="kw">nullptr</span>);
+
+    <span class="var">cin</span> &gt;&gt; <span class="var">n</span> &gt;&gt; <span class="var">m</span>;
+    <span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; <span class="var">m</span>; <span class="var">i</span>++) {
+        <span class="type">int</span> <span class="var">u</span>, <span class="var">v</span>;
+        <span class="var">cin</span> &gt;&gt; <span class="var">u</span> &gt;&gt; <span class="var">v</span>;
+        <span class="var">adj</span>[<span class="var">u</span>].<span class="fn">push_back</span>(<span class="var">v</span>);
+    }
+
+    <span class="fn">tarjan</span>();
+
+    <span class="var">cout</span> &lt;&lt; <span class="str">"So SCC: "</span> &lt;&lt; <span class="var">sccs</span>.<span class="fn">size</span>() &lt;&lt; <span class="str">"\n"</span>;
+    <span class="kw">for</span> (<span class="kw">auto</span>&amp; <span class="var">scc</span> : <span class="var">sccs</span>) {
+        <span class="kw">for</span> (<span class="type">int</span> <span class="var">x</span> : <span class="var">scc</span>) <span class="var">cout</span> &lt;&lt; <span class="var">x</span> &lt;&lt; <span class="str">" "</span>;
+        <span class="var">cout</span> &lt;&lt; <span class="str">"\n"</span>;
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+    </div>
+  </div>
+
+  <!-- Độ phức tạp -->
+  <div>
+    <div class="section-label">Phân tích</div>
+    <h2>Độ phức tạp & so sánh</h2>
+    <div class="card">
+      <table class="complexity-table">
+        <thead>
+          <tr>
+            <th>Thuật toán</th>
+            <th>Thời gian</th>
+            <th>Không gian</th>
+            <th>DFS pass</th>
+            <th>Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tarjan</td>
+            <td><code>O(V + E)</code></td>
+            <td><code>O(V)</code></td>
+            <td><span class="tag tag-green">1 lần</span></td>
+            <td style="color: var(--muted);">Nhanh nhất, dùng stack</td>
+          </tr>
+          <tr>
+            <td>Kosaraju</td>
+            <td><code>O(V + E)</code></td>
+            <td><code>O(V)</code></td>
+            <td><span class="tag tag-orange">2 lần</span></td>
+            <td style="color: var(--muted);">Đảo ngược đồ thị, dễ hiểu hơn</td>
+          </tr>
+          <tr>
+            <td>Naive (brute)</td>
+            <td><code>O(V²)</code></td>
+            <td><code>O(V²)</code></td>
+            <td><span class="tag tag-purple">V lần</span></td>
+            <td style="color: var(--muted);">Không thực tế với graph lớn</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Lưu ý quan trọng -->
+  <div>
+    <div class="section-label">Lưu ý</div>
+    <h2>Các điểm cần nhớ</h2>
+    <div class="note">
+      <strong>Stack overflow:</strong> Với đồ thị rất sâu (V &gt; 10⁵), đệ quy DFS có thể bị stack overflow. Giải pháp: dùng <code>ulimit -s unlimited</code> hoặc chuyển sang DFS iterative.
+    </div>
+    <div class="note" style="border-color: var(--orange); background: rgba(240,136,62,0.08); margin-top: 0.6rem;">
+      <strong style="color: var(--orange);">inStack vs visited:</strong> Chỉ cập nhật <code>low[u]</code> với đỉnh đang <em>trong stack</em>, không phải mọi đỉnh đã thăm. Đây là điểm dễ nhầm nhất.
+    </div>
+    <div class="note" style="border-color: var(--green); background: rgba(63,185,80,0.08); margin-top: 0.6rem;">
+      <strong style="color: var(--green);">Thứ tự SCC:</strong> Tarjan trả về SCC theo thứ tự <em>reverse topological order</em> của DAG thu gọn — rất tiện cho bài toán xử lý SCC theo topo.
+    </div>
+  </div>
+
+  <!-- Ứng dụng -->
+  <div>
+    <div class="section-label">Ứng dụng thực tế</div>
+    <h2>Dùng Tarjan khi nào?</h2>
+    <div class="app-grid">
+      <div class="app-item">
+        <div class="app-icon">🔄</div>
+        <strong>Phát hiện chu trình</strong>
+        <span>Kiểm tra đồ thị có chu trình hay không — mỗi SCC có &gt;1 đỉnh chứa chu trình.</span>
+      </div>
+      <div class="app-item">
+        <div class="app-icon">🗜️</div>
+        <strong>Condensation graph</strong>
+        <span>Nén đồ thị thành DAG, mỗi SCC là một siêu đỉnh — dùng cho DP trên DAG.</span>
+      </div>
+      <div class="app-item">
+        <div class="app-icon">🔐</div>
+        <strong>2-SAT</strong>
+        <span>Giải bài toán thỏa mãn ràng buộc 2-clause bằng cách dùng Tarjan SCC.</span>
+      </div>
+      <div class="app-item">
+        <div class="app-icon">🌐</div>
+        <strong>Web crawling</strong>
+        <span>Phát hiện nhóm trang web liên kết chặt chẽ lẫn nhau trong mạng link.</span>
+      </div>
+      <div class="app-item">
+        <div class="app-icon">⚙️</div>
+        <strong>Phụ thuộc module</strong>
+        <span>Tìm phụ thuộc vòng tròn trong hệ thống build, package manager.</span>
+      </div>
+      <div class="app-item">
+        <div class="app-icon">🎮</div>
+        <strong>Game theory</strong>
+        <span>Phân tích trạng thái game, tìm các nhóm trạng thái tương đương nhau.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Thuật toán Tarjan — Robert Tarjan, 1972 &nbsp;·&nbsp; Độ phức tạp tối ưu O(V + E)
+</footer>
+
+<script>
+  function selectStep(el) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
